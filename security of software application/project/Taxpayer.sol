@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: UNLICENSED
+
 pragma solidity ^0.8.22;
 
 import "Lottery.sol";
@@ -46,14 +48,35 @@ uint256 rev;
 
  //We require new_spouse != address(0);
  function marry(address new_spouse) public {
+  require(new_spouse != address(0), "invalid spouse");
+  require(new_spouse != address(this), "cannot marry self");
+  // if already married to the same spouse, nothing to do
+  if (spouse == new_spouse && isMarried) return;
+
   spouse = new_spouse;
   isMarried = true;
- }
+
+  // enforce symmetry
+  Taxpayer sp = Taxpayer(new_spouse);
+  if (sp.getSpouse() != address(this)) {
+    sp.marry(address(this));
+  }
+  }
+
  
  function divorce() public {
-  spouse = address(0);
-  isMarried = false;
- }
+    address old = spouse;
+    spouse = address(0);
+    isMarried = false;
+
+    if (old != address(0)) {
+        Taxpayer sp = Taxpayer(old);
+      if (sp.getSpouse() == address(this)) {
+            sp.divorce();
+        }
+    }
+  }
+
 
  /* Transfer part of tax allowance to own spouse */
  function transferAllowance(uint change) public {
@@ -87,5 +110,40 @@ uint256 rev;
     l.reveal(r);
     rev = 0;
   }
+
+  function getSpouse() public view returns(address) {
+    return spouse;
+  }
+
+  function getIsMarried() public view returns(bool) {
+      return isMarried;
+  }
+
+  function getAge() public view returns(uint) {
+      return age;
+  }
+
+
+  function echidna_marriage_is_symmetric() public view returns (bool) {
+      if (spouse == address(0)) return true;
+      if (spouse.code.length == 0) return true; // evita EOA
+      
+      Taxpayer sp = Taxpayer(spouse);
+      return sp.getSpouse() == address(this);
+  }
+
+
+  function echidna_no_self_marriage() public view returns (bool) {
+    return spouse != address(this);
+  }
+
+
+  function echidna_marriage_flag_consistent() public view returns (bool) {
+    if (spouse == address(0)) return isMarried == false;
+    return isMarried == true;
+  }
+
+
+
 
 }

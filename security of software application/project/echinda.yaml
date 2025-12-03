@@ -1,0 +1,9 @@
+testMode: assertion
+
+filterFunction: false
+deployContracts:
+  taxpayer:
+    contract: Taxpayer
+    args:
+      - "0x0000000000000000000000000000000000000001"
+      - "0x0000000000000000000000000000000000000002"
