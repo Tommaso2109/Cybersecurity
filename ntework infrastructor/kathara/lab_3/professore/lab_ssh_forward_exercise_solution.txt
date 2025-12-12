@@ -1,0 +1,17 @@
+Solution point 1)
+
+on pc2: ssh -v -NR 5000:localhost:22 s1user@10.0.1.1
+on pc1: ssh pc2user@10.0.0.1 -p 5000
+
+
+----------------------------------
+
+
+Solution point 2)
+
+(uncomment line 11 of r1.startup and r2.startup, required by the exercise)
+on pc2: ssh -v -NR 5000:localhost:22 s1user@10.0.1.1
+on pc1: ssh -v -NL 6000:localhost:5000 s1user@10.0.0.1
+on pc1: ssh pc2user@localhost -p 6000
+
+In this way, the traffic exchanged between the nodes always uses port 22.

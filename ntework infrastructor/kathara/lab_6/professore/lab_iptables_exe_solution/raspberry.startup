@@ -1,0 +1,27 @@
+python3 /shared/echoserver.py &
+
+# NAT
+iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+iptables -A FORWARD -i eth1 -m state --state NEW -j DROP
+
+#	Solution point 1.
+#	Enable forwarding of SSH connections on port 22
+#	Here -I is used instead of -A since otherwise the connection would be dropped by the rule at line 5
+iptables -I FORWARD -i eth1 -p tcp --dport 22 -j ACCEPT
+#	Make incoming SSH connections to be redirected to "sshserver" node behind NAT on port 22
+iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 22 -j DNAT --to-destination 172.16.0.100:22
+
+
+
+#	Solution point 2.
+#	Prevent connections from sshserver to raspberry
+iptables -A INPUT -s 172.16.0.0/16 -j DROP
+
+#	Prevent connections from sshserver to home network and public internet
+iptables -A FORWARD -s 172.16.0.0/16 -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -s 172.16.0.0/16 -j DROP
+
+#	The previous rule permits the forwarding of all packets belonging to existing connections.
+#	Without it, any packet (even SSH packets) would be dropped by the rule at line 22.
+#	Alternatively, the same result of the two rules at line 21 and 22 could be achieved with the single rule:
+#	iptables -A FORWARD -s 172.16.0.0/16 -m state --state NEW -j DROP
