@@ -1,3 +1,0 @@
-auto eth0
-iface eth0 inet static
-	address 20.0.0.0/31
